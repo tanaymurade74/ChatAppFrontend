@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import Login from "./components/Login";
 import Register from "./components/Register";
 import { Chat } from "./components/Chat";
+import {BrowserRouter, Route, Routes, Navigate} from "react-router-dom"
 import "bootstrap/dist/js/bootstrap.min.js";
 import "bootstrap/dist/css/bootstrap.min.css";
 
@@ -9,23 +10,19 @@ const App = () => {
   const [user, setUser] = useState(null);
 
   return (
-    <div className="app">
-      <h1>Chat App</h1>
-      {!user ? (
-        <div className="container mt-5 text-center">
-          <div className="row">
-            <div className="col-md-6">
-              <Register setUser={setUser} />
-            </div>
-            <div className="col-md-6">
-              <Login setUser={setUser} />
-            </div>
-          </div>
-        </div>
-      ) : (
-        <Chat user={user} />
-      )}
-    </div>
+    <BrowserRouter>
+      <div className="app">
+        <h1 className="text-center mt-3">Chat App</h1>
+        <Routes>
+          <Route path="/" element={<Register />} />
+          <Route path="/login" element={<Login />} />
+          
+          <Route path="/chats/:username" element={<Chat />} />
+          
+          <Route path="*" element={<Navigate to="/" />} />
+        </Routes>
+      </div>
+    </BrowserRouter>
   );
 };
 
