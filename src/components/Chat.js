@@ -38,7 +38,10 @@ export const Chat = () => {
       }
     };
 
-    if (user) fetchUsers();
+    if (user) {
+      fetchUsers();
+      socket.emit("mark_all_delivered", user);
+    }
 
     socket.on("receive_message", (data) => {
       if (data.receiver === user) {
@@ -51,6 +54,9 @@ export const Chat = () => {
             sender: data.sender, 
             receiver: user 
         });
+      }else if(data.receiver === user){
+        setUsers(prevUsers=> prevUsers.map(us => us.username === data.sender ? 
+          {...us, unreadCount: (us.unreadCount || 0 + 1)} : us))
       }
     });
 
@@ -67,9 +73,17 @@ export const Chat = () => {
     });
 
     socket.on("chat_read_by_user", (data) => {
-      if (data.reader === currentChat) {
+      if (data.reader === currentChat && data.chatWith === user) {
         setMessages((prev) => prev.map((msg) => 
           msg.sender === user ? { ...msg, status: "read" } : msg
+        ));
+      }
+    });
+
+    socket.on("user_came_online", (onlineUser) => {
+      if (onlineUser === currentChat) {
+        setMessages((prev) => prev.map((msg) => 
+          (msg.sender === user && msg.status === "sent") ? { ...msg, status: "delivered" } : msg
         ));
       }
     });
@@ -87,6 +101,7 @@ export const Chat = () => {
       socket.off("message_saved");
       socket.off("status_updated_to_delivered");
       socket.off("chat_read_by_user");
+      socket.off("user_came_online");
       socket.off("user_typing");
       socket.off("user_stopped_typing");
     };
@@ -112,6 +127,9 @@ export const Chat = () => {
       });
       setMessages(data);
       setCurrentChat(receiver);
+
+      setUsers(prevUsers => prevUsers.map(us => us.username === receiver? 
+        {...us, unreadCount: 0} : us));
 
       socket.emit("mark_chat_read", { sender: receiver, receiver: user });
     } catch (error) {
@@ -178,6 +196,12 @@ export const Chat = () => {
                   onClick={() => fetchMessages(u.username)}
                 >
                   {u.username}
+
+                  {u.unreadCount > 0 && (
+                    <span className="badge bg-danger rounded-pill">
+                      {u.unreadCount}
+                    </span>
+                  )}
                 </button>
               ))}
             </div>
