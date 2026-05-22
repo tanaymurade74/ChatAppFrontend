@@ -19,7 +19,8 @@ export const Chat = () => {
   const [currentMessage, setCurrentMessage] = useState("");
   const [isTyping, setIsTyping] = useState(false);
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
-  const [replyingTo, setReplyingTo] = useState(null); 
+  const [replyingTo, setReplyingTo] = useState(null);
+  const [editingMessage, setEditingMessage] = useState(null); 
 
   useEffect(() => {
     if (!user) {
@@ -114,6 +115,22 @@ export const Chat = () => {
       if (data.sender === currentChat) setIsTyping(false);
     });
 
+    socket.on("message_edited", ({ _id, message, editedAt }) => {
+      setMessages((prev) =>
+        prev.map((m) => (m._id === _id ? { ...m, message, editedAt } : m))
+      );
+    });
+
+    socket.on("message_deleted", ({ _id }) => {
+      setMessages((prev) =>
+        prev.map((m) =>
+          m._id === _id
+            ? { ...m, deletedAt: new Date().toISOString(), message: "" }
+            : m
+        )
+      );
+    });
+
     return () => {
       socket.off("receive_message");
       socket.off("message_saved");
@@ -122,6 +139,8 @@ export const Chat = () => {
       socket.off("user_came_online");
       socket.off("user_typing");
       socket.off("user_stopped_typing");
+      socket.off("message_edited");
+      socket.off("message_deleted");
     };
   }, [currentChat, user]);
 
@@ -139,6 +158,7 @@ export const Chat = () => {
 
   useEffect(() => {
     setReplyingTo(null);
+    setEditingMessage(null);
   }, [currentChat]);
 
   const fetchMessages = async (receiver) => {
@@ -166,10 +186,86 @@ export const Chat = () => {
   };
 
   const handleReply = (msg) => {
+    setEditingMessage(null); 
     setReplyingTo(msg);
   };
 
+  const handleEdit = (msg) => {
+    setReplyingTo(null);
+    setEditingMessage(msg);
+    setCurrentMessage(msg.message); 
+  };
+
+  const cancelEdit = () => {
+    setEditingMessage(null);
+    setCurrentMessage("");
+  };
+
+  const saveEdit = async () => {
+    if (!currentMessage.trim() || !editingMessage) return;
+    const newText = currentMessage.trim();
+    const original = editingMessage;
+
+    setMessages((prev) =>
+      prev.map((m) =>
+        m._id === original._id
+          ? { ...m, message: newText, editedAt: new Date().toISOString() }
+          : m
+      )
+    );
+    setEditingMessage(null);
+    setCurrentMessage("");
+
+    try {
+      await axios.patch(
+        `${process.env.REACT_APP_API_URL}/messages/${original._id}`,
+        { newMessage: newText, username: user }
+      );
+    } catch (err) {
+      console.error("Edit failed", err);
+      setMessages((prev) =>
+        prev.map((m) =>
+          m._id === original._id
+            ? { ...m, message: original.message, editedAt: original.editedAt }
+            : m
+        )
+      );
+      alert(err.response?.data?.error || "Could not edit message");
+    }
+  };
+
+  const handleDelete = async (msg) => {
+
+    setMessages((prev) =>
+      prev.map((m) =>
+        m._id === msg._id
+          ? { ...m, deletedAt: new Date().toISOString(), message: "" }
+          : m
+      )
+    );
+
+    try {
+      await axios.delete(
+        `${process.env.REACT_APP_API_URL}/messages/${msg._id}`,
+        { data: { username: user } }
+      );
+    } catch (err) {
+      console.error("Delete failed", err);
+      setMessages((prev) =>
+        prev.map((m) =>
+          m._id === msg._id ? { ...m, deletedAt: null, message: msg.message } : m
+        )
+      );
+      alert(err.response?.data?.error || "Could not delete message");
+    }
+  };
+
   const sendMessage = () => {
+    if (editingMessage) {
+      saveEdit();
+      return;
+    }
+
     if (!currentMessage.trim()) return;
 
     const tempId = Date.now().toString();
@@ -234,7 +330,6 @@ export const Chat = () => {
                   onClick={() => fetchMessages(u.username)}
                 >
                   {u.username}
-
                   {u.unreadCount > 0 && (
                     <span className="badge bg-danger rounded-pill">
                       {u.unreadCount}
@@ -261,6 +356,8 @@ export const Chat = () => {
                   messages={messages}
                   user={user}
                   onReply={handleReply}
+                  onEdit={handleEdit}
+                  onDelete={handleDelete}
                 />
                 {isTyping && (
                   <div className="text-muted small mt-2">
@@ -270,8 +367,9 @@ export const Chat = () => {
               </div>
 
               <div className="card-footer bg-white position-relative">
+                {/* Reply banner */}
                 {replyingTo && (
-                  <div className="d-flex justify-content-between align-items-center p-2 mb-2 bg-light border-4 rounded">
+                  <div className="d-flex justify-content-between align-items-center p-2 mb-2 bg-light border-start border-4 border-primary rounded">
                     <div className="flex-grow-1 me-2" style={{ minWidth: 0 }}>
                       <div className="small text-primary fw-bold">
                         Replying to{" "}
@@ -286,6 +384,25 @@ export const Chat = () => {
                       className="btn-close"
                       aria-label="Cancel reply"
                       onClick={() => setReplyingTo(null)}
+                    />
+                  </div>
+                )}
+
+                {editingMessage && (
+                  <div className="d-flex justify-content-between align-items-center p-2 mb-2 bg-warning-subtle border-start border-4 border-warning rounded">
+                    <div className="flex-grow-1 me-2" style={{ minWidth: 0 }}>
+                      <div className="small fw-bold text-warning-emphasis">
+                        Editing message
+                      </div>
+                      <div className="small text-muted text-truncate">
+                        {editingMessage.message}
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      className="btn-close"
+                      aria-label="Cancel edit"
+                      onClick={cancelEdit}
                     />
                   </div>
                 )}
@@ -317,13 +434,20 @@ export const Chat = () => {
                     type="text"
                     className="form-control"
                     placeholder={
-                      replyingTo ? `Reply to ${replyingTo.sender}...` : "Type a message..."
+                      editingMessage
+                        ? "Edit message..."
+                        : replyingTo
+                        ? `Reply to ${replyingTo.sender}...`
+                        : "Type a message..."
                     }
                     value={currentMessage}
                     onChange={(e) => setCurrentMessage(e.target.value)}
                     onKeyDown={(e) => {
                       if (e.key === "Enter") sendMessage();
-                      if (e.key === "Escape" && replyingTo) setReplyingTo(null);
+                      if (e.key === "Escape") {
+                        if (editingMessage) cancelEdit();
+                        if (replyingTo) setReplyingTo(null);
+                      }
                     }}
                   />
 
@@ -332,7 +456,7 @@ export const Chat = () => {
                     type="button"
                     onClick={sendMessage}
                   >
-                    Send
+                    {editingMessage ? "Save" : "Send"}
                   </button>
                 </div>
               </div>

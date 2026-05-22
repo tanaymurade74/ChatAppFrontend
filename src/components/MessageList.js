@@ -1,31 +1,34 @@
-const MessageList = ({ messages, user, onReply }) => {
+const MessageList = ({ messages, user, onReply, onEdit, onDelete }) => {
   const formatTime = (dateString) => {
     if (!dateString) return "";
     const date = new Date(dateString);
     return date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
   };
 
+  const canEdit = (msg) =>
+    msg.sender === user && !msg.deletedAt 
+
   return (
     <div className="message-list">
       {messages.map((msg, index) => {
         const isMe = msg.sender === user;
-        const timeToDisplay = msg.createdAt;
+        const isDeleted = !!msg.deletedAt;
 
         return (
           <div
             key={msg._id || msg.tempId || index}
             className={`message ${isMe ? "sent" : "received"} message-row`}
           >
-            {msg.replyTo && (
+            {msg.replyTo && !isDeleted && (
               <div
                 style={{
-                  borderLeft: "3px",
+                  borderLeft: "3px solid #0d6efd",
                   paddingLeft: "8px",
                   paddingTop: "2px",
                   paddingBottom: "2px",
                   marginBottom: "6px",
                   fontSize: "12px",
-                  // opacity: 0.85,
+                  opacity: 0.85,
                   backgroundColor: isMe
                     ? "rgba(255,255,255,0.25)"
                     : "rgba(0,0,0,0.04)",
@@ -33,14 +36,36 @@ const MessageList = ({ messages, user, onReply }) => {
                 }}
               >
                 <div
-                  style={{ maxWidth: "240px" }}
+                  style={{
+                    fontWeight: "bold",
+                    color: isMe ? "rgba(0,0,0,0.7)" : "#0d6efd",
+                  }}
                 >
-                  {msg.replyTo.message}
+                  {msg.replyTo.sender === user ? "You" : msg.replyTo.sender}
+                </div>
+                <div className="text-truncate" style={{ maxWidth: "240px" }}>
+                  {msg.replyTo.deletedAt ? (
+                    <em>Deleted message</em>
+                  ) : (
+                    msg.replyTo.message
+                  )}
                 </div>
               </div>
             )}
 
-            <div style={{ marginBottom: "2px" }}>{msg.message}</div>
+            {isDeleted ? (
+              <div
+                style={{
+                  fontStyle: "italic",
+                  opacity: 0.6,
+                  marginBottom: "2px",
+                }}
+              >
+                🚫 This message was deleted
+              </div>
+            ) : (
+              <div style={{ marginBottom: "2px" }}>{msg.message}</div>
+            )}
 
             <div
               style={{
@@ -51,16 +76,27 @@ const MessageList = ({ messages, user, onReply }) => {
                 marginTop: "4px",
               }}
             >
+              {msg.editedAt && !isDeleted && (
+                <span
+                  style={{
+                    fontSize: "10px",
+                    opacity: 0.6,
+                    fontStyle: "italic",
+                  }}
+                >
+                  edited
+                </span>
+              )}
               <span
                 style={{
                   fontSize: "10px",
                   color: isMe ? "rgba(0,0,0,0.5)" : "gray",
                 }}
               >
-                {formatTime(timeToDisplay)}
+                {formatTime(msg.createdAt)}
               </span>
 
-              {isMe && (
+              {isMe && !isDeleted && (
                 <span style={{ fontSize: "12px", fontWeight: "bold" }}>
                   {msg.status === "sending" && <span style={{ color: "gray" }}>⏱</span>}
                   {msg.status === "sent" && <span style={{ color: "gray" }}>✓</span>}
@@ -70,14 +106,34 @@ const MessageList = ({ messages, user, onReply }) => {
               )}
             </div>
 
-            {msg._id && (
-              <button
-                className="reply-btn "
-                title="Reply"
-                onClick={() => onReply(msg)}
-              >
-                ↩
-              </button>
+            {msg._id && !isDeleted && (
+              <div className="message-actions">
+                <button
+                  className="action-btn"
+                  title="Reply"
+                  onClick={() => onReply(msg)}
+                >
+                  ↩
+                </button>
+                {canEdit(msg) && (
+                  <button
+                    className="action-btn"
+                    title="Edit"
+                    onClick={() => onEdit(msg)}
+                  >
+                    ✏️
+                  </button>
+                )}
+                {isMe && (
+                  <button
+                    className="action-btn"
+                    title="Delete"
+                    onClick={() => onDelete(msg)}
+                  >
+                    🗑️
+                  </button>
+                )}
+              </div>
             )}
           </div>
         );
