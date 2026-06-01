@@ -71,7 +71,7 @@ export const Chat = () => {
       setMessages((prev) =>
         prev.map((msg) =>
           msg.tempId === data.tempId
-            ? { ...msg, _id: data.realId, status: "sent" }
+            ? { ...msg, _id: data.realId, status: "sent", message: data.message }
             : msg
         )
       );
