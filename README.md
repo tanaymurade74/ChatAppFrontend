@@ -1,70 +1,162 @@
-# Getting Started with Create React App
+ Chat App Frontend
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+A real-time chat application built with React and Socket.IO. Features include instant messaging, typing indicators, message read receipts, emoji support, reply threads, message editing/deletion, and profanity filtering.
 
-## Available Scripts
+![React](https://img.shields.io/badge/React-19-blue?logo=react)
+![Socket.IO](https://img.shields.io/badge/Socket.IO-4.8-black?logo=socketdotio)
+![Bootstrap](https://img.shields.io/badge/Bootstrap-5.3-purple?logo=bootstrap)
 
-In the project directory, you can run:
+---
+Live Link: https://chat-app-frontend-three-umber.vercel.app
 
-### `npm start`
+ Features
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+- **Real-time messaging** — Instant message delivery powered by Socket.IO
+- **Typing indicators** — See when the other person is typing
+- **Message status tracking** — Sending → Sent → Delivered → Read (with tick indicators)
+- **Emoji picker** — Built-in emoji keyboard for expressive conversations
+- **Reply to messages** — Quote and reply to specific messages in the chat
+- **Edit messages** — Edit your sent messages with an "edited" indicator
+- **Delete messages** — Soft-delete your messages (shown as "This message was deleted")
+- **Unread count badges** — See how many unread messages you have per contact
+- **Profanity filter** — Abusive language is automatically censored on the backend
+- **User authentication** — Register and login with username/password (bcrypt + JWT)
+- **Responsive UI** — Mobile-friendly layout with Bootstrap 5
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+---
 
-### `npm test`
+ Tech Stack
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+| Layer      | Technology                        |
+| ---------- | --------------------------------- |
+| UI         | React 19, Bootstrap 5             |
+| Routing    | React Router DOM v7               |
+| Real-time  | Socket.IO Client                  |
+| HTTP       | Axios                             |
+| Emojis     | emoji-picker-react                |
 
-### `npm run build`
+---
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+ Project Structure
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+```
+src/
+├── App.js                  # Routes and app shell
+├── components/
+│   ├── Register.js         # User registration page
+│   ├── Login.js            # User login page
+│   ├── Chat.js             # Main chat interface (users list + message area)
+│   ├── MessageList.js      # Renders messages with status, replies, actions
+│   └── chat.css            # Chat-specific styles
+├── styles.css
+├── index.js
+└── index.css
+```
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+---
 
-### `npm run eject`
+ Getting Started
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+### Prerequisites
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+- [Node.js](https://nodejs.org/) (v18 or above recommended)
+- The backend server running (see [Backend Repository](#-backend-repository))
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
+### Installation
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
+1. **Clone the repository**
 
-## Learn More
+   ```bash
+   git clone https://github.com/tanaymurade74/ChatAppFrontend.git
+   cd ChatAppFrontend
+   ```
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+2. **Install dependencies**
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+   ```bash
+   npm install
+   ```
 
-### Code Splitting
+3. **Configure environment variables**
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
+   Create a `.env` file in the root directory:
 
-### Analyzing the Bundle Size
+   ```env
+   REACT_APP_API_URL=https://chatappbackend-1-gglp.onrender.com
+   ```
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
+   Replace the URL with your backend server address if different.
 
-### Making a Progressive Web App
+4. **Start the development server**
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
+   ```bash
+   npm start
+   ```
 
-### Advanced Configuration
+   The app will open at [http://localhost:3000](http://localhost:3000).
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
+---
 
-### Deployment
+##  Backend Repository
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
+The backend for this app is built with Express, MongoDB, and Socket.IO.
 
-### `npm run build` fails to minify
+👉 **[ChatAppBackend on GitHub](https://github.com/tanaymurade74/ChatAppBackend)**
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+### Backend Tech Stack
+
+- Express 5
+- MongoDB + Mongoose
+- Socket.IO
+- JWT Authentication
+- bcrypt for password hashing
+- Obscenity (profanity filtering)
+
+Refer to the backend repo's README for setup instructions.
+
+---
+
+## 📡 API Endpoints (Backend)
+
+| Method   | Endpoint          | Description                     |
+| -------- | ----------------- | ------------------------------- |
+| `POST`   | `/auth/register`  | Register a new user             |
+| `POST`   | `/auth/login`     | Login with credentials          |
+| `GET`    | `/users`          | Get all users (with unread count) |
+| `GET`    | `/messages`       | Fetch messages between two users |
+| `PATCH`  | `/messages/:id`   | Edit a message                  |
+| `DELETE` | `/messages/:id`   | Soft-delete a message           |
+
+### Socket Events
+
+| Event                | Direction       | Description                          |
+| -------------------- | --------------- | ------------------------------------ |
+| `send_message`       | Client → Server | Send a new message                   |
+| `receive_message`    | Server → Client | Receive a new message                |
+| `message_saved`      | Server → Client | Confirmation with real DB ID         |
+| `message_delivered`  | Client → Server | Mark message as delivered             |
+| `mark_chat_read`     | Client → Server | Mark all messages in a chat as read  |
+| `mark_all_delivered` | Client → Server | Mark offline messages as delivered   |
+| `typing`             | Client → Server | Notify typing started                |
+| `stop_typing`        | Client → Server | Notify typing stopped                |
+| `message_edited`     | Server → Client | Broadcast edited message             |
+| `message_deleted`    | Server → Client | Broadcast deleted message            |
+
+---
+
+## 📜 Available Scripts
+
+| Command         | Description                          |
+| --------------- | ------------------------------------ |
+| `npm start`     | Run the app in development mode      |
+| `npm run build` | Build for production                 |
+| `npm test`      | Run tests                            |
+| `npm run eject` | Eject from Create React App (one-way)|
+
+
+---
+
+## 👤 Author
+
+**Tanay Murade**  
+GitHub: [@tanaymurade74](https://github.com/tanaymurade74)
