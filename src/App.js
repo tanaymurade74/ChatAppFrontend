@@ -12,7 +12,7 @@ const App = () => {
   return (
     <BrowserRouter>
       <div className="app">
-        <h1 className="text-center mt-3">Chat App</h1>
+        <h1 className="text-center mt-3">Nexus Chat</h1>
         <Routes>
           <Route path="/" element={<Register />} />
           <Route path="/login" element={<Login />} />
